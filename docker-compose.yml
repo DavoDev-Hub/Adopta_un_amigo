@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # MongoDB
+  mongodb:
+    image: mongo:7.0
+    container_name: adoption-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: adoption-platform
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - adoption-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./adoption-platform-backend
+      dockerfile: Dockerfile
+    container_name: adoption-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGODB_URI: mongodb://mongodb:27017/adoption-platform
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_EXPIRE: 7d
+      CORS_ORIGIN: http://localhost:3000
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - adoption-network
+    volumes:
+      - backend_uploads:/app/uploads
+
+  # Frontend Next.js
+  frontend:
+    build:
+      context: ./adoption-platform-frontend
+      dockerfile: Dockerfile
+    container_name: adoption-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:5000/api
+    depends_on:
+      - backend
+    networks:
+      - adoption-network
+
+  # Mongo Express (opcional - para desarrollo)
+  mongo-express:
+    image: mongo-express:latest
+    container_name: adoption-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+    depends_on:
+      - mongodb
+    networks:
+      - adoption-network
+    profiles:
+      - dev
+
+networks:
+  adoption-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  backend_uploads:

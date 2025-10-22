@@ -1,234 +1,322 @@
-# 🐾 Plataforma de Adopción - Frontend Unificado
+# 🐾 Plataforma de Adopción - Proyecto Completo con Docker
 
-Frontend unificado que combina los paneles de **Usuario** y **Administrador** para la plataforma de adopción de animales.
+Sistema completo de adopción de animales con frontend (Next.js), backend (Node.js + Express) y base de datos (MongoDB), todo dockerizado.
 
-## 📁 Estructura del Proyecto
+## 📦 Estructura del Proyecto
 
 ```
-adoption-platform-frontend/
-├── app/
-│   ├── (public)/          # Rutas públicas (sin autenticación)
-│   │   ├── page.tsx       # Home - lista de animales
-│   │   ├── login/         # Login de usuarios
-│   │   └── register/      # Registro de usuarios
-│   │
-│   ├── (user)/            # Rutas de usuario (requieren auth)
-│   │   ├── adopt/[id]/    # Formulario de adopción
-│   │   └── submissions/   # Mis solicitudes
-│   │
-│   └── (admin)/           # Rutas de admin (requieren auth + role admin)
-│       ├── dashboard/     # Dashboard con estadísticas
-│       ├── animales/      # CRUD de animales
-│       ├── solicitudes/   # Gestión de solicitudes
-│       └── buscar-chip/   # Búsqueda por chip
-│
-├── components/
-│   ├── ui/                # Componentes shadcn/ui
-│   ├── admin/             # Componentes específicos de admin
-│   ├── animal-card.tsx    # Card de animal
-│   ├── navigation.tsx     # Navegación principal
-│   └── ...
-│
-├── lib/
-│   ├── mock-data.ts       # Datos mock del usuario
-│   ├── admin-api.ts       # API mock del admin
-│   ├── auth.ts            # Utilidades de auth
-│   └── utils.ts           # Utilidades generales
-│
-├── hooks/                 # Custom hooks
-├── contexts/              # React contexts (Auth, etc.)
-├── types/                 # TypeScript types
-└── public/                # Archivos estáticos (imágenes)
+.
+├── adoption-platform-frontend/    # Frontend Next.js
+├── adoption-platform-backend/     # Backend Node.js + Express
+└── docker-compose.yml             # Orquestación de servicios
 ```
 
-## 🎯 Características
+## 🚀 Inicio Rápido
 
-### Rutas Públicas
-- ✅ Home con lista de animales disponibles
-- ✅ Login y registro de usuarios
+### Opción 1: Con Docker (Recomendado)
 
-### Rutas de Usuario (Autenticado)
-- ✅ Ver detalles de animales
-- ✅ Formulario de solicitud de adopción
-- ✅ Ver mis solicitudes enviadas
+**Requisitos:**
+- Docker Desktop instalado
+- Docker Compose
 
-### Rutas de Admin (Autenticado + Role Admin)
-- ✅ Dashboard con estadísticas
-- ✅ CRUD completo de animales
-- ✅ Gestión de solicitudes de adopción
-- ✅ Búsqueda de animales por chip
+**Pasos:**
 
-## 🚀 Instalación y Uso
+1. **Clonar/Descomprimir el proyecto**
 
-### 1. Instalar dependencias
-
+2. **Crear archivo .env en el backend**
 ```bash
+cd adoption-platform-backend
+cp .env.example .env
+```
+
+Edita `.env` y cambia el `JWT_SECRET`:
+```env
+JWT_SECRET=tu-secreto-super-seguro-aqui
+```
+
+3. **Levantar todos los servicios**
+```bash
+# Volver a la raíz del proyecto
+cd ..
+
+# Levantar servicios
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f
+```
+
+4. **Acceder a la aplicación**
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:5000
+- **Mongo Express** (dev): http://localhost:8081 (usuario: admin, password: admin123)
+
+5. **Verificar que todo funciona**
+```bash
+# Health check del backend
+curl http://localhost:5000/health
+```
+
+### Opción 2: Desarrollo Local (Sin Docker)
+
+**Requisitos:**
+- Node.js 18+
+- MongoDB instalado localmente
+
+**Backend:**
+```bash
+cd adoption-platform-backend
+cp .env.example .env
 npm install
-# o
-pnpm install
-# o
-yarn install
+npm run dev
 ```
 
-### 2. Configurar variables de entorno
+**Frontend:**
+```bash
+cd adoption-platform-frontend
+npm install
+npm run dev
+```
 
-Copia el archivo `.env.example` a `.env.local`:
+## 📚 Endpoints del API
+
+### Autenticación
+```
+POST   /api/auth/register    - Registrar usuario
+POST   /api/auth/login       - Iniciar sesión
+GET    /api/auth/me          - Obtener usuario actual
+POST   /api/auth/logout      - Cerrar sesión
+```
+
+### Animales
+```
+GET    /api/animals                  - Listar animales
+GET    /api/animals/:id              - Ver un animal
+POST   /api/animals                  - Crear animal (Admin)
+PUT    /api/animals/:id              - Actualizar animal (Admin)
+DELETE /api/animals/:id              - Eliminar animal (Admin)
+GET    /api/animals/chip/:chip       - Buscar por chip (Admin)
+GET    /api/animals/admin/stats      - Estadísticas (Admin)
+```
+
+### Solicitudes
+```
+POST   /api/applications             - Crear solicitud (Usuario)
+GET    /api/applications/my          - Mis solicitudes (Usuario)
+GET    /api/applications/:id         - Ver solicitud
+GET    /api/applications             - Todas las solicitudes (Admin)
+PUT    /api/applications/:id         - Actualizar estado (Admin)
+GET    /api/applications/admin/stats - Estadísticas (Admin)
+```
+
+## 🔐 Autenticación
+
+El sistema usa JWT con cookies HttpOnly para autenticación segura.
+
+**Headers para peticiones autenticadas:**
+```
+Authorization: Bearer <token>
+```
+
+O usar cookies automáticamente.
+
+## 👥 Usuarios de Prueba
+
+Después de levantar el proyecto, puedes crear usuarios:
+
+**Usuario normal:**
+- Registrarse en `/register`
+- Rol: `user` (por defecto)
+
+**Admin:**
+- Crear manualmente en MongoDB o registrarse y cambiar el rol en la BD
+
+## 🐳 Comandos Docker Útiles
 
 ```bash
-cp .env.example .env.local
+# Levantar servicios
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f [servicio]
+
+# Parar servicios
+docker-compose down
+
+# Parar y eliminar volúmenes (⚠️ borra datos)
+docker-compose down -v
+
+# Reconstruir imágenes
+docker-compose build
+
+# Levantar solo ciertos servicios
+docker-compose up -d backend mongodb
+
+# Entrar a un contenedor
+docker exec -it adoption-backend sh
+docker exec -it adoption-mongodb mongosh
+
+# Ver servicios corriendo
+docker-compose ps
+
+# Levantar con Mongo Express (dev)
+docker-compose --profile dev up -d
 ```
 
-Edita `.env.local` si necesitas cambiar la URL del API:
+## 📊 MongoDB
 
+**Acceso directo:**
+```bash
+# Desde tu máquina
+mongosh mongodb://localhost:27017/adoption-platform
+
+# Desde el contenedor
+docker exec -it adoption-mongodb mongosh adoption-platform
+```
+
+**Colecciones:**
+- `users` - Usuarios del sistema
+- `animals` - Animales disponibles
+- `applications` - Solicitudes de adopción
+
+## 🔧 Variables de Entorno
+
+### Backend (.env)
+```env
+NODE_ENV=development|production
+PORT=5000
+MONGODB_URI=mongodb://mongodb:27017/adoption-platform
+JWT_SECRET=tu-secreto-aqui
+JWT_EXPIRE=7d
+CORS_ORIGIN=http://localhost:3000
+```
+
+### Frontend (.env.local)
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
 ```
 
-### 3. Ejecutar en desarrollo
+## 📝 Desarrollo
+
+### Hot Reload en Desarrollo
+
+Para desarrollo con hot reload, usa los comandos locales en lugar de Docker:
 
 ```bash
+# Terminal 1 - Backend
+cd adoption-platform-backend
 npm run dev
+
+# Terminal 2 - Frontend  
+cd adoption-platform-frontend
+npm run dev
+
+# MongoDB con Docker
+docker-compose up -d mongodb
 ```
 
-Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
-
-## 🔐 Autenticación y Rutas Protegidas
-
-El proyecto usa **Next.js Middleware** para proteger rutas:
-
-- **Rutas públicas** (`/`, `/login`, `/register`): Acceso sin autenticación
-- **Rutas de usuario** (`/adopt/*`, `/submissions`): Requieren autenticación
-- **Rutas de admin** (`/dashboard`, `/animales`, etc.): Requieren autenticación + rol admin
-
-### Middleware (`middleware.ts`)
-
-El middleware verifica:
-1. Si la ruta requiere autenticación
-2. Si existe un token en las cookies
-3. Si la ruta es de admin, verifica el rol (cuando conectes el backend)
-
-## 📊 Datos Mock
-
-Actualmente el proyecto usa datos mock para desarrollo:
-
-- **Usuario**: `lib/mock-data.ts`
-- **Admin**: `lib/admin-api.ts`
-
-Cuando conectes el backend, reemplazarás estos archivos con llamadas API reales.
-
-## 🎨 Estilos y Componentes
-
-- **Framework CSS**: Tailwind CSS v4
-- **Componentes UI**: shadcn/ui con Radix UI
-- **Iconos**: Lucide React
-- **Fuentes**: Geist Sans y Geist Mono
-
-## 📦 Scripts Disponibles
+### Linter y Formato
 
 ```bash
-# Desarrollo
-npm run dev
+# Backend
+cd adoption-platform-backend
+npm run lint
 
-# Build de producción
-npm run build
-
-# Ejecutar build
-npm run start
-
-# Linter
+# Frontend
+cd adoption-platform-frontend
 npm run lint
 ```
 
-## 🔄 Próximos Pasos
+## 🧪 Testing
 
-### Fase 1: Conectar con Backend
-1. Crear servicios API en `lib/api.ts`
-2. Reemplazar `mock-data.ts` con llamadas reales
-3. Implementar autenticación JWT real
-4. Actualizar middleware para verificar roles
+```bash
+# Backend (pendiente)
+cd adoption-platform-backend
+npm test
 
-### Fase 2: Mejorar UX
-1. Agregar loading states
-2. Implementar manejo de errores
-3. Agregar notificaciones (toast)
-4. Mejorar validaciones de formularios
-
-### Fase 3: Features Adicionales
-1. Upload de imágenes de animales
-2. Filtros y búsqueda de animales
-3. Perfil de usuario editable
-4. Sistema de notificaciones
-
-## 🏗️ Arquitectura de Route Groups
-
-Los **route groups** (carpetas con paréntesis) te permiten organizar rutas sin afectar la URL:
-
-```
-app/
-├── (public)/page.tsx      → /
-├── (user)/adopt/[id]/     → /adopt/[id]
-└── (admin)/dashboard/     → /dashboard
+# Frontend (pendiente)
+cd adoption-platform-frontend
+npm test
 ```
 
-Ventajas:
-- ✅ Organización lógica del código
-- ✅ Layouts específicos por grupo
-- ✅ Middleware selectivo
-- ✅ URLs limpias
+## 🚢 Deploy en Producción
 
-## 🤝 Integración con Backend
+### Variables de Entorno Importantes
 
-Cuando tengas el backend listo:
+1. **Cambiar `JWT_SECRET`** a algo seguro
+2. **Configurar `CORS_ORIGIN`** con tu dominio real
+3. **`NODE_ENV=production`** en ambos servicios
+4. **MongoDB** usar MongoDB Atlas o servidor dedicado
 
-1. **Actualizar API client** (`lib/api.ts`):
-```typescript
-import axios from 'axios'
+### Recomendaciones
 
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  withCredentials: true
-})
+- Usar Docker Swarm o Kubernetes para orquestación
+- Implementar SSL/TLS (HTTPS)
+- Configurar backups automáticos de MongoDB
+- Implementar rate limiting
+- Agregar monitoring (Prometheus, Grafana)
+- Usar nginx como reverse proxy
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
+## 🔒 Seguridad
 
-export default api
+- ✅ Passwords hasheados con bcrypt
+- ✅ JWT con HttpOnly cookies
+- ✅ Helmet.js para headers de seguridad
+- ✅ CORS configurado
+- ✅ Validación de inputs
+- ✅ Rate limiting (pendiente)
+
+## 📖 Documentación Adicional
+
+- [Frontend README](./adoption-platform-frontend/README.md)
+- [Backend API Docs](./adoption-platform-backend/README.md)
+
+## 🐛 Troubleshooting
+
+### Puerto ya en uso
+```bash
+# Cambiar puertos en docker-compose.yml
+ports:
+  - "3001:3000"  # Frontend
+  - "5001:5000"  # Backend
 ```
 
-2. **Reemplazar mocks**:
-```typescript
-// Antes
-import { mockApi } from '@/lib/mock-data'
-const animals = await mockApi.getAnimals()
+### MongoDB no conecta
+```bash
+# Verificar que MongoDB esté corriendo
+docker-compose ps mongodb
 
-// Después
-import api from '@/lib/api'
-const { data } = await api.get('/animals')
+# Ver logs
+docker-compose logs mongodb
+
+# Reiniciar servicio
+docker-compose restart mongodb
 ```
 
-3. **Actualizar auth context** para guardar tokens y user data
+### Frontend no se conecta al backend
+- Verificar `NEXT_PUBLIC_API_URL` en el frontend
+- Verificar `CORS_ORIGIN` en el backend
+- Comprobar que el backend esté corriendo en el puerto correcto
 
-## 📚 Recursos
+### Limpiar todo y empezar de nuevo
+```bash
+docker-compose down -v
+docker system prune -a
+docker-compose up -d --build
+```
 
-- [Next.js Docs](https://nextjs.org/docs)
-- [Tailwind CSS](https://tailwindcss.com/docs)
-- [shadcn/ui](https://ui.shadcn.com/)
-- [React Hook Form](https://react-hook-form.com/)
+## 📞 Soporte
 
-## 📝 Notas
+¿Problemas? Verifica:
+1. Docker Desktop está corriendo
+2. Puertos 3000, 5000, 27017 están libres
+3. Variables de entorno configuradas
+4. Logs de los servicios: `docker-compose logs -f`
 
-- El proyecto está configurado con TypeScript strict mode
-- Se usa App Router de Next.js 15
-- Las imágenes están en `/public` y se optimizan automáticamente
-- Los componentes UI son de shadcn/ui (customizables)
+## 📄 Licencia
+
+MIT
 
 ---
 
-**¿Listo para el siguiente paso?** 🚀
-
-Cuando quieras, podemos empezar con el backend siguiendo el plan de implementación.
+**¡Disfruta desarrollando!** 🚀🐾
