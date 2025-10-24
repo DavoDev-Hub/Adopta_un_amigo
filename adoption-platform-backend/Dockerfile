@@ -10,7 +10,7 @@ COPY package*.json ./
 COPY tsconfig.json ./
 
 # Instalar dependencias
-RUN npm ci
+RUN npm install
 
 # Copiar código fuente
 COPY src ./src
@@ -31,7 +31,7 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 
 # Instalar solo dependencias de producción
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --only=production && npm cache clean --force
 
 # Crear usuario no-root
 RUN addgroup -g 1001 -S nodejs && \
