@@ -20,7 +20,6 @@ Sistema completo de adopción de animales con frontend (Next.js), backend (Node.
 - Docker Compose
 
 **Pasos:**
-
 1. **Clonar/Descomprimir el proyecto**
 
 2. **Crear archivo .env en el backend**
