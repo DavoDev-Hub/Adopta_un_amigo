@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Heart, Loader2 } from "lucide-react"
-
 export default function RegisterPage() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
